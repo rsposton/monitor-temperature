@@ -9,18 +9,18 @@ class Thermometer
 
   def find_sensor(command_line_arguments)
     ## ::Initialize sensor location::
-    ## On the Raspberry Pi, the device should connect in /sys/bus/devices and
+    ## On the Raspberry Pi, the device should connect in /sys/bus/w1/devices and
     ##   the sensor will attach to a directory that starts with 28-*****
     ##  - The sensor value will be in that directory, in a file called w1_slave
     ## Note: for testing, we can pass in a filename
 
     sensor_location=command_line_arguments[:file]
     if sensor_location.nil?
-      if File.directory? File.expand_path('/sys/bus/devices')
-        if Dir["/sys/bus/devices/28-*"].count == 1
-          if Dir["/sys/bus/devices/28-*/w1_slave"].count == 1
-            @slave_file = Dir["/sys/bus/devices/28-*/w1_slave"][0]
-          else abort "ZOIKS: w1_slave file not found for device #{Dir["/sys/bus/devices/28-*"]}"
+      if File.directory? File.expand_path('/sys/bus/w1/devices')
+        if Dir["/sys/bus/w1/devices/28-*"].count == 1
+          if Dir["/sys/bus/w1/devices/28-*/w1_slave"].count == 1
+            @slave_file = Dir["/sys/bus/w1/devices/28-*/w1_slave"][0]
+          else abort "ZOIKS: w1_slave file not found for device #{Dir["/sys/bus/w1/devices/28-*"]}"
           end
         else abort "ZOIKS: more than one device found, time to write that new code"
         end
