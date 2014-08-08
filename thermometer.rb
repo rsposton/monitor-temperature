@@ -43,8 +43,9 @@ class Thermometer
   def read
     gauge_working_line = File.open(@slave_file, &:readline)
     temperature_line = File.readlines(@slave_file)[1]
-    if gauge_working_line.split(' ').count == 11
-      if gauge_working_line.split(' ')[10] == "YES"
+    if gauge_working_line.split(' ').count >= 11
+      position = gauge_working_line.split(' ').count - 1
+      if gauge_working_line.split(' ')[position] == "YES"
         if temperature_line.split('=').count == 2
           return temperature_line.split('=')[1].gsub("\n","").to_f
         else abort "ZOIKS: not getting the right format for the temperature line: #{temperature_line.split(' ')}"
