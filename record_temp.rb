@@ -26,5 +26,5 @@ puts "Temperature in fahrenheit: #{fahrenheit}"
 
 puts "\n*** Recording Temperature to Endpoint ***"
 puts "recording location:  #{command_line_arguments[:location]}"
-puts "recording location:  #{command_line_arguments[:location]}"
+puts "temperature recorded:  #{fahrenheit}"
 record_temp(command_line_arguments[:endpoint],command_line_arguments[:location],fahrenheit)
