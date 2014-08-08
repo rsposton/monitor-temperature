@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require_relative('Thermometer')
+require_relative('thermometer')
 require_relative('functions')
 require('open-uri')
 
