@@ -4,6 +4,7 @@ require_relative('functions')
 require('open-uri')
 
 puts "\n*** Initializing Setup ***"
+puts "Time: #{Time.now}"
 t=Thermometer.new
 command_line_arguments = check_args
 puts "Endpoint details:"
