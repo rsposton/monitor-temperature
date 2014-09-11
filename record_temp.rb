@@ -19,13 +19,17 @@ t.find_sensor(command_line_arguments)
 
 
 puts "\n*** Checking Thermometer File ***"
-celcius = t.read.to_celcius
-fahrenheit = t.read.to_fahrenheit
+readings = t.read
 
-puts "Temperature in celcius: #{celcius}"
-puts "Temperature in fahrenheit: #{fahrenheit}"
+readings.each do |reading|
+   puts "Reading in celcius: "+reading.to_celcius.to_s
+   puts "Reading in fahrenheit: "+reading.to_fahrenheit.to_s
+end
 
 puts "\n*** Recording Temperature to Endpoint ***"
-puts "recording location:  #{command_line_arguments[:location]}"
-puts "temperature recorded:  #{fahrenheit}"
-record_temp(command_line_arguments[:endpoint],command_line_arguments[:location],fahrenheit)
+readings.each do |reading|
+  puts "recording location:  #{command_line_arguments[:location]}"
+  fahrenheit = reading.to_fahrenheit
+  puts "temperature recorded:  #{fahrenheit}"
+  #record_temp(command_line_arguments[:endpoint],command_line_arguments[:location],fahrenheit)
+end

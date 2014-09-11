@@ -32,6 +32,11 @@ def check_args
       options[:location] = s
     end
 
+    ## run in test mode?
+    opts.on("-t", "--test [STRING]", String, "Say yes if you want to check your local directory for the temperature file") do |s|
+      options[:test] = s
+    end
+
   end.parse!
 
   return options

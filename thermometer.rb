@@ -15,24 +15,30 @@ class Thermometer
     ## Note: for testing, we can pass in a filename
 
     sensor_location=command_line_arguments[:file]
+    @slave_file = []      
     if sensor_location.nil?
-      if File.directory? File.expand_path('/sys/bus/w1/devices')
-        if Dir["/sys/bus/w1/devices/28-*"].count == 1
-          if Dir["/sys/bus/w1/devices/28-*/w1_slave"].count == 1
-            @slave_file = Dir["/sys/bus/w1/devices/28-*/w1_slave"][0]
-          else abort "ZOIKS: w1_slave file not found for device #{Dir["/sys/bus/w1/devices/28-*"]}"
+      root_dir = command_line_arguments[:test].nil? ? '/sys/bus/w1/devices' : '/home/regan/Workspace/temperature/monitor-temperature/devices'
+      
+      if File.directory? File.expand_path(root_dir)
+        if Dir[root_dir+"/28-*"].count == 1
+          if Dir[root_dir+"/28-*/w1_slave"].count == 1
+            @slave_file << Dir[root_dir+"/28-*/w1_slave"][0]
+          else abort "ZOIKS: w1_slave file not found for device #{Dir[root_dir+"/28-*"]}"
           end
-        else abort "ZOIKS: more than one device found, time to write that new code"
+        else
+          Dir[root_dir+"/28-*"].each do |s|
+            @slave_file << s+"/w1_slave" 
+            puts "Sensor: "+s+"/w1_slave"
+          end
         end
       else abort "ZOIKS: devices directory not found"
       end
     else
       if Dir[sensor_location].count == 1
-        @slave_file = sensor_location
+        @slave_file << sensor_location
       else abort "ZOIKS: your command line file is not found"
       end
     end
-    puts "Reading from file: #{File.expand_path(@slave_file)}"
   end
 
 
@@ -41,21 +47,25 @@ class Thermometer
     ##   Line 0:  tells you if the sensor is working (YES/NO)      - gauge_working_line
     ##   Line 1:  gives the temperature after "t=" in celcius*1000 - temperature_line
   def read
-    gauge_working_line = File.open(@slave_file, &:readline)
-    temperature_line = File.readlines(@slave_file)[1]
-    if gauge_working_line.split(' ').count >= 11
-      position = gauge_working_line.split(' ').count - 1
-      if gauge_working_line.split(' ')[position] == "YES"
-        if temperature_line.split('=').count == 2
-          return temperature_line.split('=')[1].gsub("\n","").to_f
-        else abort "ZOIKS: not getting the right format for the temperature line: #{temperature_line.split(' ')}"
+    temps = []
+    @slave_file.each do |slave_file_location|
+      puts "Reading from file: #{File.expand_path(slave_file_location)}"
+      gauge_working_line = File.open(slave_file_location, &:readline)
+      temperature_line = File.readlines(slave_file_location)[1]
+      if gauge_working_line.split(' ').count >= 11
+        position = gauge_working_line.split(' ').count - 1
+        if gauge_working_line.split(' ')[position] == "YES"
+          if temperature_line.split('=').count == 2
+            temps << temperature_line.split('=')[1].gsub("\n","").to_f
+          else abort "ZOIKS: not getting the right format for the temperature line: #{temperature_line.split(' ')}"
+          end
+        else abort "ZOIKS: looks like the thermometer isn't working right now"
         end
-      else abort "ZOIKS: looks like the thermometer isn't working right now"
+      else abort "ZOIKS: format wrong, found this on the first line: #{gauge_working_line.split(' ')}"
       end
-    else abort "ZOIKS: format wrong, found this on the first line: #{gauge_working_line.split(' ')}"
     end
+    return temps
   end
-
 
 end
 
