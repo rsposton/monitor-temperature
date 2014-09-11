@@ -7,6 +7,11 @@ class Thermometer
   def initialize
   end
 
+  def find_sensor_id_and_file(sensor_path,root_dir)
+    {'sensor_id'=>sensor_path.gsub(root_dir+"/","").gsub("/w1_slave",""),
+     'slave_file'=>sensor_path}
+  end
+
   def find_sensor(command_line_arguments)
     ## ::Initialize sensor location::
     ## On the Raspberry Pi, the device should connect in /sys/bus/w1/devices and
@@ -20,22 +25,26 @@ class Thermometer
       root_dir = command_line_arguments[:test].nil? ? '/sys/bus/w1/devices' : '/home/regan/Workspace/temperature/monitor-temperature/devices'
       
       if File.directory? File.expand_path(root_dir)
-        if Dir[root_dir+"/28-*"].count == 1
-          if Dir[root_dir+"/28-*/w1_slave"].count == 1
-            @slave_file << Dir[root_dir+"/28-*/w1_slave"][0]
+        if Dir[root_dir+"/28-*"].count > 0
+          if Dir[root_dir+"/28-*/w1_slave"].count > 0
+            Dir[root_dir+"/28-*"].each do |s|
+              file = s + "/w1_slave"
+              hash_for_sensor = find_sensor_id_and_file(file,root_dir)
+              puts "Sensor id: "+hash_for_sensor['sensor_id']
+              @slave_file << hash_for_sensor
+              puts "Sensor: "+hash_for_sensor['slave_file']
+            end
           else abort "ZOIKS: w1_slave file not found for device #{Dir[root_dir+"/28-*"]}"
-          end
-        else
-          Dir[root_dir+"/28-*"].each do |s|
-            @slave_file << s+"/w1_slave" 
-            puts "Sensor: "+s+"/w1_slave"
           end
         end
       else abort "ZOIKS: devices directory not found"
       end
-    else
+    else  # manual file passed in via command line, assume its right
       if Dir[sensor_location].count == 1
-        @slave_file << sensor_location
+        sensor_id="manual-file"
+        @slave_file << {'sensor_id'=>sensor_id,
+                        'slave_file'=>sensor_location}
+
       else abort "ZOIKS: your command line file is not found"
       end
     end
@@ -48,15 +57,16 @@ class Thermometer
     ##   Line 1:  gives the temperature after "t=" in celcius*1000 - temperature_line
   def read
     temps = []
-    @slave_file.each do |slave_file_location|
-      puts "Reading from file: #{File.expand_path(slave_file_location)}"
-      gauge_working_line = File.open(slave_file_location, &:readline)
-      temperature_line = File.readlines(slave_file_location)[1]
+    @slave_file.each do |slave_file_hash|
+      puts "Reading from file: #{File.expand_path(slave_file_hash['slave_file'])}"
+      gauge_working_line = File.open(slave_file_hash['slave_file'], &:readline)
+      temperature_line = File.readlines(slave_file_hash['slave_file'])[1]
       if gauge_working_line.split(' ').count >= 11
         position = gauge_working_line.split(' ').count - 1
         if gauge_working_line.split(' ')[position] == "YES"
           if temperature_line.split('=').count == 2
-            temps << temperature_line.split('=')[1].gsub("\n","").to_f
+            temps << {'temp'=>temperature_line.split('=')[1].gsub("\n","").to_f,
+                      'sensor_id'=>slave_file_hash['sensor_id']}
           else abort "ZOIKS: not getting the right format for the temperature line: #{temperature_line.split(' ')}"
           end
         else abort "ZOIKS: looks like the thermometer isn't working right now"

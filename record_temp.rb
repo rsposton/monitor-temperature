@@ -22,14 +22,15 @@ puts "\n*** Checking Thermometer File ***"
 readings = t.read
 
 readings.each do |reading|
-   puts "Reading in celcius: "+reading.to_celcius.to_s
-   puts "Reading in fahrenheit: "+reading.to_fahrenheit.to_s
+   puts "Reading in celcius: "+reading['temp'].to_celcius.to_s
+   puts "Reading in fahrenheit: "+reading['temp'].to_fahrenheit.to_s
 end
 
 puts "\n*** Recording Temperature to Endpoint ***"
 readings.each do |reading|
   puts "recording location:  #{command_line_arguments[:location]}"
-  fahrenheit = reading.to_fahrenheit
+  fahrenheit = reading['temp'].to_fahrenheit
   puts "temperature recorded:  #{fahrenheit}"
+  puts "sensor_id: #{reading['sensor_id']}"
   #record_temp(command_line_arguments[:endpoint],command_line_arguments[:location],fahrenheit)
 end
